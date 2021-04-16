@@ -46,7 +46,7 @@ func handler(rw http.ResponseWriter, req *http.Request) {
 	content, err := io.ReadAll(req.Body)
 	if err != nil {
 		rw.WriteHeader(http.StatusInternalServerError)
-		rw.Write([]byte(err.Error() + "\n"))
+		rw.Write([]byte(err.Error() + "\n")) //nolint:errcheck
 		return
 	}
 
@@ -58,7 +58,7 @@ func handler(rw http.ResponseWriter, req *http.Request) {
 		os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0666)
 	if errors.Is(err, os.ErrExist) {
 		rw.WriteHeader(http.StatusConflict)
-		rw.Write([]byte("File exists\n"))
+		rw.Write([]byte("File exists\n")) //nolint:errcheck
 		return
 	}
 	defer file.Close()
@@ -66,11 +66,11 @@ func handler(rw http.ResponseWriter, req *http.Request) {
 	_, err = file.Write(content)
 	if err != nil {
 		rw.WriteHeader(http.StatusInternalServerError)
-		rw.Write([]byte(err.Error() + "\n"))
+		rw.Write([]byte(err.Error() + "\n")) //nolint:errcheck
 		return
 	}
 	u := url.URL{Scheme: "http", Host: req.Host, Path: shortsum}
-	rw.Write([]byte(u.String() + "\n"))
+	rw.Write([]byte(u.String() + "\n")) //nolint:errcheck
 }
 
 func logger(next http.Handler) http.Handler {
@@ -106,6 +106,8 @@ func main() {
 	log.Println("received interrupt, shutting down …")
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
-	srv.Shutdown(ctx)
+	if err := srv.Shutdown(ctx); err != nil {
+		log.Printf("HTTP server Shutdown: %v", err)
+	}
 	log.Println("goodbye.")
 }
