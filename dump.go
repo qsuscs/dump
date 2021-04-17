@@ -82,6 +82,11 @@ func logger(next http.Handler) http.Handler {
 	return handlers.CombinedLoggingHandler(os.Stdout, next)
 }
 
+func forbiddenHandler(rw http.ResponseWriter, _req *http.Request) {
+	rw.WriteHeader(http.StatusForbidden)
+	rw.Write([]byte("403 Forbidden\n")) //nolint:errcheck
+}
+
 func main() {
 	flag.Parse()
 
@@ -98,6 +103,7 @@ func main() {
 		r.Use(handlers.ProxyHeaders)
 	}
 	r.HandleFunc("/new", handler)
+	r.Path("/").HandlerFunc(forbiddenHandler)
 	r.PathPrefix("/").Handler(http.FileServer(http.Dir(cfg.Path)))
 
 	srv := &http.Server{
