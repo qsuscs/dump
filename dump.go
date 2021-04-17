@@ -22,9 +22,9 @@ import (
 const secret = "fnord"
 
 var (
-	fListen = flag.String("listen", ":8001", "where to listen")
-	fPath   = flag.String("path", ".", "path to place the uploaded files")
-	fProxy  = flag.Bool("proxy", false, "set when running behind a proxy")
+	fConfig = flag.String("config", "config.json", "path to config file")
+
+	path string
 )
 
 func handler(rw http.ResponseWriter, req *http.Request) {
@@ -53,7 +53,7 @@ func handler(rw http.ResponseWriter, req *http.Request) {
 	sum := md5.Sum(content)
 	shortsum := base64.StdEncoding.EncodeToString(sum[:])[:10]
 
-	filename := filepath.Join(*fPath, shortsum)
+	filename := filepath.Join(path, shortsum)
 	file, err := os.OpenFile(filename,
 		os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0666)
 	if err != nil {
@@ -85,16 +85,23 @@ func logger(next http.Handler) http.Handler {
 func main() {
 	flag.Parse()
 
+	cfg, err := readConfig(*fConfig)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	path = cfg.Path
+
 	r := mux.NewRouter()
 	r.Use(logger)
-	if *fProxy {
+	if cfg.Proxy {
 		r.Use(handlers.ProxyHeaders)
 	}
 	r.HandleFunc("/new", handler)
-	r.PathPrefix("/").Handler(http.FileServer(http.Dir(*fPath)))
+	r.PathPrefix("/").Handler(http.FileServer(http.Dir(cfg.Path)))
 
 	srv := &http.Server{
-		Addr:    *fListen,
+		Addr:    cfg.Listen,
 		Handler: r,
 	}
 
