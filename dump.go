@@ -56,9 +56,14 @@ func handler(rw http.ResponseWriter, req *http.Request) {
 	filename := filepath.Join(*fPath, shortsum)
 	file, err := os.OpenFile(filename,
 		os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0666)
-	if errors.Is(err, os.ErrExist) {
-		rw.WriteHeader(http.StatusConflict)
-		rw.Write([]byte("File exists\n")) //nolint:errcheck
+	if err != nil {
+		if errors.Is(err, os.ErrExist) {
+			rw.WriteHeader(http.StatusConflict)
+			rw.Write([]byte("File exists\n")) //nolint:errcheck
+		} else {
+			rw.WriteHeader(http.StatusInternalServerError)
+			rw.Write([]byte(err.Error() + "/n")) //nolint:errcheck
+		}
 		return
 	}
 	defer file.Close()
