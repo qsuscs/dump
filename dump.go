@@ -31,15 +31,17 @@ func handler(rw http.ResponseWriter, req *http.Request) {
 		if req.Method == "OPTIONS" {
 			rw.WriteHeader(http.StatusNoContent)
 		} else {
-			rw.WriteHeader(http.StatusMethodNotAllowed)
+			http.Error(
+				rw,
+				http.StatusText(http.StatusMethodNotAllowed),
+				http.StatusMethodNotAllowed)
 		}
 		return
 	}
 
 	content, err := io.ReadAll(req.Body)
 	if err != nil {
-		rw.WriteHeader(http.StatusInternalServerError)
-		rw.Write([]byte(err.Error() + "\n")) //nolint:errcheck
+		http.Error(rw, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -51,11 +53,9 @@ func handler(rw http.ResponseWriter, req *http.Request) {
 		os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0666)
 	if err != nil {
 		if errors.Is(err, os.ErrExist) {
-			rw.WriteHeader(http.StatusConflict)
-			rw.Write([]byte("File exists\n")) //nolint:errcheck
+			http.Error(rw, "File exists", http.StatusConflict)
 		} else {
-			rw.WriteHeader(http.StatusInternalServerError)
-			rw.Write([]byte(err.Error() + "/n")) //nolint:errcheck
+			http.Error(rw, err.Error(), http.StatusInternalServerError)
 		}
 		return
 	}
@@ -63,8 +63,7 @@ func handler(rw http.ResponseWriter, req *http.Request) {
 
 	_, err = file.Write(content)
 	if err != nil {
-		rw.WriteHeader(http.StatusInternalServerError)
-		rw.Write([]byte(err.Error() + "\n")) //nolint:errcheck
+		http.Error(rw, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	u := url.URL{Scheme: "http", Host: req.Host, Path: shortsum}
@@ -76,8 +75,7 @@ func logger(next http.Handler) http.Handler {
 }
 
 func forbiddenHandler(rw http.ResponseWriter, _req *http.Request) {
-	rw.WriteHeader(http.StatusForbidden)
-	rw.Write([]byte("403 Forbidden\n")) //nolint:errcheck
+	http.Error(rw, http.StatusText(http.StatusForbidden), http.StatusForbidden)
 }
 
 func main() {
