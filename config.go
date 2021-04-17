@@ -7,9 +7,10 @@ import (
 )
 
 type config struct {
-	Listen string
-	Path   string
-	Proxy  bool
+	Listen    string
+	Path      string
+	Proxy     bool
+	BasicAuth map[string]string
 }
 
 func readConfig(filename string) (config, error) {

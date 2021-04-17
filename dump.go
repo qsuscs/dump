@@ -19,8 +19,6 @@ import (
 	"github.com/gorilla/mux"
 )
 
-const secret = "fnord"
-
 var (
 	fConfig = flag.String("config", "config.json", "path to config file")
 
@@ -35,11 +33,6 @@ func handler(rw http.ResponseWriter, req *http.Request) {
 		} else {
 			rw.WriteHeader(http.StatusMethodNotAllowed)
 		}
-		return
-	}
-
-	if req.Header.Get("Authorization") != secret {
-		rw.WriteHeader(http.StatusUnauthorized)
 		return
 	}
 
@@ -102,7 +95,8 @@ func main() {
 	if cfg.Proxy {
 		r.Use(handlers.ProxyHeaders)
 	}
-	r.HandleFunc("/new", handler)
+	basicAuth := basicAuthMiddleware{Users: cfg.BasicAuth}
+	r.Handle("/new", basicAuth.Middleware(http.HandlerFunc(handler)))
 	r.Path("/").HandlerFunc(forbiddenHandler)
 	r.PathPrefix("/").Handler(http.FileServer(http.Dir(cfg.Path)))
 

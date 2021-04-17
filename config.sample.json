@@ -1,5 +1,8 @@
 {
   "listen": ":8001",
   "path": ".",
-  "proxy": false
+  "proxy": false,
+  "basicauth": {
+    "user": "secret"
+  }
 }
