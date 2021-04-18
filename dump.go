@@ -66,7 +66,10 @@ func handler(rw http.ResponseWriter, req *http.Request) {
 		http.Error(rw, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	u := url.URL{Scheme: "http", Host: req.Host, Path: shortsum}
+	u := url.URL{Scheme: req.URL.Scheme, Host: req.Host, Path: shortsum}
+	if u.Scheme == "" {
+		u.Scheme = "http"
+	}
 	rw.Write([]byte(u.String() + "\n")) //nolint:errcheck
 }
 
