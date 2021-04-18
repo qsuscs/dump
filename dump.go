@@ -24,6 +24,10 @@ var (
 	fConfig      = flag.String("config", "config.json", "path to config file")
 	fLogNoPrefix = flag.Bool("log-no-prefix", false,
 		"don’t prefix log lines with timestamps (useful for systemd)")
+	fAccessLog = flag.String("access-log", "",
+		"path to access log file (overriding config)")
+	fPath = flag.String("path", "",
+		"path to store files at (overriding config)")
 
 	path string
 )
@@ -98,14 +102,39 @@ func main() {
 		log.Fatal(err)
 	}
 
-	path = cfg.Path
+	if *fPath != "" {
+		path = *fPath
+	} else if cfg.Path != "" {
+		path = cfg.Path
+	} else {
+		log.Fatal("no path configured")
+	}
+
+	stat, err := os.Stat(path)
+	if errors.Is(err, os.ErrNotExist) {
+		err = os.Mkdir(path, 0640)
+		if err != nil {
+			log.Fatal(err)
+		}
+	} else if !stat.IsDir() {
+		log.Fatalf("path %s exists and is not a directory", path)
+	} else if err != nil {
+		log.Fatal(err)
+	}
 
 	r := mux.NewRouter()
 
-	if cfg.AccessLog == nil || *cfg.AccessLog == "-" {
+	accesslog := "-"
+	if cfg.AccessLog != "" {
+		accesslog = cfg.AccessLog
+	}
+	if *fAccessLog != "" {
+		accesslog = *fAccessLog
+	}
+	if accesslog == "-" {
 		r.Use(logger(os.Stdout))
 	} else {
-		dst, err := os.OpenFile(*cfg.AccessLog,
+		dst, err := os.OpenFile(accesslog,
 			os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0640)
 		if err != nil {
 			log.Fatal(err)

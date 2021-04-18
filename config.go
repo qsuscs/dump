@@ -11,7 +11,7 @@ type config struct {
 	Path      string
 	Proxy     bool
 	BasicAuth map[string]string
-	AccessLog *string
+	AccessLog string
 }
 
 func readConfig(filename string) (config, error) {
