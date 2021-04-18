@@ -90,6 +90,21 @@ func forbiddenHandler(rw http.ResponseWriter, _req *http.Request) {
 	http.Error(rw, http.StatusText(http.StatusForbidden), http.StatusForbidden)
 }
 
+func securityHeadersHandler(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		h := w.Header()
+		h.Add("Content-Security-Policy",
+			"default-src 'none'; frame-ancestors 'none'")
+		h.Add("X-Frame-Options", "DENY")
+		h.Add("X-XSS-Protection", "1; mode=block")
+		h.Add("Referrer-Policy", "no-referrer")
+		h.Add("Content-Disposition", "attachment")
+		h.Add("X-Content-Type-Options", "nosniff")
+
+		next.ServeHTTP(w, r)
+	})
+}
+
 func main() {
 	flag.Parse()
 
@@ -148,7 +163,8 @@ func main() {
 	basicAuth := basicAuthMiddleware{Users: cfg.BasicAuth}
 	r.Handle("/new", basicAuth.Middleware(http.HandlerFunc(handler)))
 	r.Path("/").HandlerFunc(forbiddenHandler)
-	r.PathPrefix("/").Handler(http.FileServer(http.Dir(cfg.Path)))
+	r.PathPrefix("/").Handler(
+		securityHeadersHandler(http.FileServer(http.Dir(cfg.Path))))
 
 	srv := &http.Server{
 		Addr:    cfg.Listen,
