@@ -21,7 +21,9 @@ import (
 )
 
 var (
-	fConfig = flag.String("config", "config.json", "path to config file")
+	fConfig      = flag.String("config", "config.json", "path to config file")
+	fLogNoPrefix = flag.Bool("log-no-prefix", false,
+		"don’t prefix log lines with timestamps (useful for systemd)")
 
 	path string
 )
@@ -86,6 +88,10 @@ func forbiddenHandler(rw http.ResponseWriter, _req *http.Request) {
 
 func main() {
 	flag.Parse()
+
+	if *fLogNoPrefix {
+		log.SetFlags(0)
+	}
 
 	cfg, err := readConfig(*fConfig)
 	if err != nil {
