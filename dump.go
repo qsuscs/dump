@@ -13,6 +13,7 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"syscall"
 	"time"
 
 	"github.com/gorilla/handlers"
@@ -114,7 +115,7 @@ func main() {
 	log.Println("ready, willing, and able.")
 
 	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 	<-c
 	log.Println("received interrupt, shutting down …")
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
