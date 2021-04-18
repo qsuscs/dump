@@ -4,5 +4,6 @@
   "proxy": false,
   "basicauth": {
     "user": "secret"
-  }
+  },
+  "accesslog": "/var/log/filedump/access.log"
 }

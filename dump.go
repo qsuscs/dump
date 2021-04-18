@@ -74,8 +74,10 @@ func handler(rw http.ResponseWriter, req *http.Request) {
 	rw.Write([]byte(u.String() + "\n")) //nolint:errcheck
 }
 
-func logger(next http.Handler) http.Handler {
-	return handlers.CombinedLoggingHandler(os.Stdout, next)
+func logger(dst *os.File) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return handlers.CombinedLoggingHandler(dst, next)
+	}
 }
 
 func forbiddenHandler(rw http.ResponseWriter, _req *http.Request) {
@@ -93,7 +95,18 @@ func main() {
 	path = cfg.Path
 
 	r := mux.NewRouter()
-	r.Use(logger)
+
+	if cfg.AccessLog == nil || *cfg.AccessLog == "-" {
+		r.Use(logger(os.Stdout))
+	} else {
+		dst, err := os.OpenFile(*cfg.AccessLog,
+			os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0640)
+		if err != nil {
+			log.Fatal(err)
+		}
+		r.Use(logger(dst))
+	}
+
 	if cfg.Proxy {
 		r.Use(handlers.ProxyHeaders)
 	}
