@@ -1,0 +1,2 @@
+#!/bin/sh
+exec find /var/lib/filedump/files/ -type f -mtime +14 -delete

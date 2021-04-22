@@ -1,0 +1,41 @@
+# Written for systemd v247
+[Unit]
+Description=filedump server
+
+[Service]
+Type=notify
+NotifyAccess=main
+ExecStart=/opt/filedump/filedump -log-no-prefix -config ${CONFIGURATION_DIRECTORY}/config.json -path ${STATE_DIRECTORY}/files -access-log ${LOGS_DIRECTORY}/access.log
+Restart=on-abnormal
+
+ProtectProc=invisible
+DynamicUser=true
+UMask=0027
+ProtectHome=true
+StateDirectory=filedump
+LogsDirectory=filedump
+ConfigurationDirectory=filedump
+StateDirectoryMode=0750
+LogsDirectoryMode=0750
+ConfigurationDirectoryMode=0750
+PrivateDevices=true
+PrivateUsers=true
+
+ProtectHostname=true
+ProtectClock=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectKernelLogs=true
+ProtectControlGroups=true
+
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+RestrictNamespaces=true
+LockPersonality=true
+MemoryDenyWriteExecute=true
+RestrictRealtime=true
+SystemCallFilter=@system-service
+SystemCallErrorNumber=EPERM
+SystemCallArchitectures=native
+
+[Install]
+WantedBy=multi-user.target
