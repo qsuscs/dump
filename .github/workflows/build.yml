@@ -25,5 +25,5 @@ jobs:
           GOARCH: ${{ matrix.goarch }}
       - uses: actions/upload-artifact@v2
         with:
-          name: dump-${{ matrix.goarch }}
-          path: dump
+          name: filedump-${{ matrix.goarch }}
+          path: filedump

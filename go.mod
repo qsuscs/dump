@@ -1,4 +1,4 @@
-module github.com/qsuscs/dump
+module github.com/qsuscs/filedump
 
 go 1.16
 
