@@ -16,6 +16,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/coreos/go-systemd/v22/daemon"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 )
@@ -177,11 +178,13 @@ func main() {
 		}
 	}()
 	log.Println("ready, willing, and able.")
+	daemon.SdNotify(false, daemon.SdNotifyReady) //nolint:errcheck
 
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 	<-c
 	log.Println("received interrupt, shutting down …")
+	daemon.SdNotify(false, daemon.SdNotifyStopping) //nolint:errcheck
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
 	if err := srv.Shutdown(ctx); err != nil {
