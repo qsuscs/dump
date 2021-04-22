@@ -128,7 +128,7 @@ func main() {
 
 	stat, err := os.Stat(path)
 	if errors.Is(err, os.ErrNotExist) {
-		err = os.Mkdir(path, 0640)
+		err = os.Mkdir(path, 0750)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -165,7 +165,7 @@ func main() {
 	r.Handle("/new", basicAuth.Middleware(http.HandlerFunc(handler)))
 	r.Path("/").HandlerFunc(forbiddenHandler)
 	r.PathPrefix("/").Handler(
-		securityHeadersHandler(http.FileServer(http.Dir(cfg.Path))))
+		securityHeadersHandler(http.FileServer(http.Dir(path))))
 
 	srv := &http.Server{
 		Addr:    cfg.Listen,
