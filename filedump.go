@@ -54,7 +54,7 @@ func handler(rw http.ResponseWriter, req *http.Request) {
 	}
 
 	sum := md5.Sum(content)
-	shortsum := base64.StdEncoding.EncodeToString(sum[:])[:10]
+	shortsum := base64.URLEncoding.EncodeToString(sum[:])[:10]
 
 	filename := filepath.Join(path, shortsum)
 	file, err := os.OpenFile(filename,
